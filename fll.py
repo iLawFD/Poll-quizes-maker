@@ -20,6 +20,10 @@ from pdfminer.high_level import extract_text
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from telegram.ext import *
+
+
+API_TOKEN = '5437308058:AAHugylPmnwAj5xPgsK61DiYXJ2jvNgDFsE'
+
 class Question:
     def __init__(self, q, a1,a2,a3,a4,a5, figureName= "") : #a question and its answers
         self.question = q
