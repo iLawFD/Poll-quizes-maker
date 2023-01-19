@@ -1,25 +1,3 @@
-import PyPDF2
-import re
-import random
-import logging
-import fitz
-import os
-from PIL import Image
-import os
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    PollAnswerHandler,
-    PollHandler,
-    filters,
-)
-from telegram import constants
-from pdfminer.high_level import extract_text
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram.ext import *
 
 
 API_TOKEN = '5437308058:AAHugylPmnwAj5xPgsK61DiYXJ2jvNgDFsE'
