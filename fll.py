@@ -23,6 +23,7 @@ from telegram.ext import *
 
 
 API_TOKEN = '5437308058:AAHugylPmnwAj5xPgsK61DiYXJ2jvNgDFsE'
+DB_URL = "postgresql://postgres:gEsdX6qWc57ImmejNMCS@containers-us-west-196.railway.app:7649/railway"
 
 class Question:
     def __init__(self, q, a1,a2,a3,a4,a5, figureName= "") : #a question and its answers
