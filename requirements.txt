@@ -5,3 +5,4 @@ PyPDF2==3.0.1
 frontend==0.0.3
 pdfminer.six==20221105
 PyMuPDF==1.21.1
+python-telegram-bot==20.0
