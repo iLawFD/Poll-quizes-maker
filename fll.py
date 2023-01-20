@@ -1,19 +1,12 @@
-
 import re
 import random
-import logging
 import fitz
 import os
-from PIL import Image
-import os
+
 from telegram.ext import (
-    Application,
     CommandHandler,
     ContextTypes,
-    MessageHandler,
-    PollAnswerHandler,
-    PollHandler,
-    filters,
+    PollHandler, 
 )
 from telegram import constants
 from pdfminer.high_level import extract_text
