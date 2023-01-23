@@ -130,8 +130,11 @@ for path in paths:
             xref =imgList[j][0]                 
             baseImg = pdf.extract_image(xref)
             imgBytes = baseImg['image'] #the actual data that we wanna extract and send
+            
             ext = baseImg['ext']
+            
             name = str(term) + str(i) + "."+ext
+            print(name)
             names.append(name)
             with open(os.path.join("images" , name), 'wb') as imgOut:
                 imgOut.write(imgBytes)
