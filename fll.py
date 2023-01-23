@@ -1,22 +1,22 @@
+
 import re
 import random
 import fitz
 import os
-
+import requests
 from telegram.ext import (
     CommandHandler,
     ContextTypes,
-    PollHandler, 
+    PollHandler,  
 )
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
 from telegram import constants
 from pdfminer.high_level import extract_text
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from telegram.ext import *
-
-API_TOKEN = '5437308058:AAHugylPmnwAj5xPgsK61DiYXJ2jvNgDFsE'
-DB_URL = "postgresql://postgres:gEsdX6qWc57ImmejNMCS@containers-us-west-196.railway.app:7649/railway"
-
+from telegram.ext import CommandHandler, CallbackQueryHandler,ConversationHandler
 class Question:
     def __init__(self, q, a1,a2,a3,a4,a5, figureName= "") : #a question and its answers
         self.question = q
@@ -44,39 +44,44 @@ class Question:
         self.figureName = name
     def getFigureName(self):
         return self.figureName
-    
-    
+
 def findMatches(compile):
     pattern = re.compile(compile)
     matches = pattern.finditer(data)
     return matches 
 
 
-path1 ="C:\\Users\\ggfor\\OneDrive\\سطح المكتب\\notdelete\\PHYS102__221__Major1__Solved.pdf"
-path2 ="C:\\Users\\ggfor\\OneDrive\\سطح المكتب\\PHYS102__212__Major1__Solved__ZERO-_VERSION.pdf"
+path1 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMjFfX01ham9yMV9fU29sdmVkLnBkZg==&h=e1a099578441d1cac467327813c69874"
+path2 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTJfX01ham9yMV9fU29sdmVkX19aRVJPLV9WRVJTSU9OLnBkZg==&h=7d8af705997b52b85c4853dbd6e1a313"
+path3 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTNfX01ham9yMV9fU29sdmVkLnBkZg==&h=b0a21d5bcfdd91d14bd0042515a6dbf7"
 
-paths = [path1, path2]
+paths = [path1,path2, path3]
 listObject = []
 term = 1
 for path in paths:
-    pdf = fitz.open(path)
+    with open("PDFF.pdf", 'wb') as file:
+        r = requests.get(path , stream= False)
+        file.write(r.content)
+    pdf = fitz.open("PDFF.pdf")
     pages = len(pdf)
     count = 0
-    data = extract_text(path)
+    data = extract_text("PDFF.pdf")
     data = data.replace("\n" , "")
     i = 1 
     b = 0       
     if("King" in data):
+        data =data.replace("King Fahd University of Petroleum & Minerals Physics Department Phys102 Coordinator: xyz" , "")
         data =data.replace("King Fahd University of Petroleum & Minerals Physics Department" , "")
+        data =data.replace("Phys102 Coordinator: xyz" , "")
     while(i < pages):
-        phys= data.index("Phys102 Coordinator",b)
+        phys= data.index("First Major",b)
         page= data.find("Page", phys)+7
         b = phys +1
         i +=1
         data = data.replace(data[phys:page] , "")
 
     questionsIndices = []
-    for match in findMatches("Q[0-9]|[0-3][0-9]\.\s"): # a pattern consist of the letter Q followed by a number followed by a dot and space 
+    for match in findMatches("Q[0-9]|[0-3][0-9]\.\s"): # a pattern consist of the letter Q followed by a number followed by a dot and a space 
         span =match.span()
         questionsIndices.append(span[0])
         count  +=1
@@ -120,13 +125,13 @@ for path in paths:
         names  = []
         
     for i , Image in enumerate(imgList,start =1 ):
-            xref =imgList[j][0]
+            xref =imgList[j][0]                 
             baseImg = pdf.extract_image(xref)
             imgBytes = baseImg['image'] #the actual data that we wanna extract and send
             ext = baseImg['ext']
             name = str(term) + str(i) + "."+ext
             names.append(name)
-            with open(os.path.join("images/" , name), 'wb') as imgOut:
+            with open(os.path.join("images" , name), 'wb') as imgOut:
                 imgOut.write(imgBytes)
             j+=1
     term +=1
@@ -203,12 +208,54 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 
+
+
+
+async def pollTerms(Questions,update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+   
+   voter = 1 
+   for i in Questions:
+        if i.containsFigure():
+                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
+        pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
+        quest = i.getQuestion()
+        exp = ""
+        if(i.lengthExceeded()):
+            holder= quest
+            (quest , last) = shorten(quest)
+            exp = holder[last:]
+       
+        message = await context.bot.send_poll(
+          update.effective_chat.id,
+          quest,
+          i.getAns(),
+        is_anonymous=False,
+        allows_multiple_answers=False,
+        type= constants.PollType.QUIZ, 
+        correct_option_id = pos, #the postion of the correct option 
+        explanation = exp,
+    )
+       #ans = update.poll.get
+        payload = {
+        message.poll.id: {
+            "questions": i.getAns(),
+            "message_id": message.message_id,
+            "chat_id": update.effective_chat.id,
+            "answers": i.getCorrectAns(),
+        }
+       }
+        context.bot_data.update(payload)
+
+
+
+
+
 async def t221(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
    
    voter = 1 
    for i in listObject[0]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = "C:\\Users\\ggfor\\OneDrive\\سطح المكتب\\notdelete\images\\"+ i.getFigureName())
+                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
         exp = ""
@@ -242,7 +289,42 @@ async def t212(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
    voter = 1 
    for i in listObject[1]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = "C:\\Users\\ggfor\\OneDrive\\سطح المكتب\\notdelete\images\\"+ i.getFigureName())
+                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
+        pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
+        quest = i.getQuestion()
+        exp = ""
+        if(i.lengthExceeded()):
+            holder= quest
+            (quest , last) = shorten(quest)
+            exp = holder[last:]
+       
+        message = await context.bot.send_poll(
+          update.effective_chat.id,
+          quest,
+          i.getAns(),
+        is_anonymous=False,
+        allows_multiple_answers=False,
+        type= constants.PollType.QUIZ, 
+        correct_option_id = pos, #the postion of the correct option 
+        explanation = exp,
+    )
+       #ans = update.poll.get
+        payload = {
+        message.poll.id: {
+            "questions": i.getAns(),
+            "message_id": message.message_id,
+            "chat_id": update.effective_chat.id,
+            "answers": i.getCorrectAns(),
+        }
+       }
+        context.bot_data.update(payload)
+
+async def t213(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+ 
+   voter = 1 
+   for i in listObject[2]:
+        if i.containsFigure():
+                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
         exp = ""
@@ -273,14 +355,39 @@ async def t212(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.bot_data.update(payload)
 
 async def start(update, context):
-    await update.message.reply_text("Hi this is a poll bot for physics major. Please write the desired term as a command e.g (/221)")
+    options = []
+    options.append(InlineKeyboardButton(text = "Term 221",callback_data= "1"))
+    options.append(InlineKeyboardButton(text = "Term 213" ,callback_data='2'))
+    options.append(InlineKeyboardButton(text = "Term 212" ,callback_data='3'))
+    options.append(InlineKeyboardButton(text = "CODE" ,url = "https://github.com/iLawFD/Poll-quizes-maker"))
+    markup = InlineKeyboardMarkup([options])
+  
+    await update.message.reply_text("Hi this is a poll bot for physics 102's majors. Please select the desired term" ,reply_markup=markup)
+    choice = update.callback_query
+    
+async def buttons(update, context):
+    query = update.callback_query
+    await query.answer()
+    if(query.data =="1"):
+       await t221(update, context)
+    elif(query.data =="2"):
+         await t213(update, context)
+    elif(query.data == "3"):
+        await t212(update, context)
+        
+
 
 t = "5437308058:AAHugylPmnwAj5xPgsK61DiYXJ2jvNgDFsE"
 app = ApplicationBuilder().token(t).build()
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(buttons))
 app.add_handler(CommandHandler("221", t221))
 app.add_handler(CommandHandler("212", t212))
-app.add_handler(PollHandler(receive_poll_answer))
+app.add_handler(CommandHandler("213", t213))
+
+
+
+
 app.run_polling()
 
 
@@ -289,7 +396,3 @@ app.run_polling()
    
 
  
-
-
-
-
