@@ -54,10 +54,11 @@ def findMatches(compile):
 path1 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMjFfX01ham9yMV9fU29sdmVkLnBkZg==&h=e1a099578441d1cac467327813c69874"
 path2 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTJfX01ham9yMV9fU29sdmVkX19aRVJPLV9WRVJTSU9OLnBkZg==&h=7d8af705997b52b85c4853dbd6e1a313"
 path3 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTNfX01ham9yMV9fU29sdmVkLnBkZg==&h=b0a21d5bcfdd91d14bd0042515a6dbf7"
-os.mkdir("images")
+
 paths = [path1,path2, path3]
 listObject = []
 term = 1
+os.mkdir("images")
 for path in paths:
     with open("PDFF.pdf", 'wb') as file:
         r = requests.get(path , stream= False)
@@ -96,7 +97,7 @@ for path in paths:
     count =0 
     for match in findMatches("E\)\s"): 
         span = match.span()
-        if(count < 19):
+        if(count < 19): 
             newLineIndex = data.index("Q" , span[0]) 
         else:
             newLineIndex = len(data) -1
@@ -113,8 +114,6 @@ for path in paths:
         question = data[start:end]
         questions.append(question)
 
-
-    #
     #Extracting images
     imgList = [] 
 
@@ -130,9 +129,7 @@ for path in paths:
             xref =imgList[j][0]                 
             baseImg = pdf.extract_image(xref)
             imgBytes = baseImg['image'] #the actual data that we wanna extract and send
-            
             ext = baseImg['ext']
-            
             name = str(term) + str(i) + "."+ext
             print(name)
             names.append(name)
