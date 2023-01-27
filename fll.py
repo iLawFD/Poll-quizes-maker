@@ -291,7 +291,7 @@ async def t212(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
    voter = 1 
    for i in listObject[1]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
+                await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
         exp = ""
@@ -326,7 +326,7 @@ async def t213(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
    voter = 1 
    for i in listObject[2]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
+                await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
         exp = ""
