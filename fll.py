@@ -257,7 +257,7 @@ async def t221(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
    voter = 1 
    for i in listObject[0]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = open("images\\"+ i.getFigureName(), "rb"))
+               await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
         exp = ""
