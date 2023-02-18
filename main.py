@@ -231,7 +231,7 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE, n ) -> None:
      for i in listObject[n]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb')))
+                await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
     
