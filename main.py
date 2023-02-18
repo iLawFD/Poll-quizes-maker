@@ -49,7 +49,7 @@ def findMatches(compile):
     pattern = re.compile(compile)
     matches = pattern.finditer(data)
     return matches 
-
+os.mkdir("images")
 path1 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMjFfX01ham9yMV9fU29sdmVkLnBkZg==&h=e1a099578441d1cac467327813c69874"
 path2 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTJfX01ham9yMV9fU29sdmVkX19aRVJPLV9WRVJTSU9OLnBkZg==&h=7d8af705997b52b85c4853dbd6e1a313"
 path3 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTNfX01ham9yMV9fU29sdmVkLnBkZg==&h=b0a21d5bcfdd91d14bd0042515a6dbf7"
