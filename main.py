@@ -39,7 +39,7 @@ class Question:
     def containsFigure(self):
         return "figure" in self.question.lower() 
     def lengthExceeded(self):
-        return len(self.question)  >= constants.PollLimit.MAX_QUESTION_LENGTH
+        return len(self.question)  >= constants.PollLimit.MAX_QUESTION_LENGTH # the max length for a poll question
     def setFigureName(self, name):
         self.figureName = name
     def getFigureName(self):
@@ -50,15 +50,16 @@ def findMatches(compile):
     matches = pattern.finditer(data)
     return matches 
 
-
 path1 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMjFfX01ham9yMV9fU29sdmVkLnBkZg==&h=e1a099578441d1cac467327813c69874"
 path2 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTJfX01ham9yMV9fU29sdmVkX19aRVJPLV9WRVJTSU9OLnBkZg==&h=7d8af705997b52b85c4853dbd6e1a313"
 path3 ="https://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18yMTNfX01ham9yMV9fU29sdmVkLnBkZg==&h=b0a21d5bcfdd91d14bd0042515a6dbf7"
-
-paths = [path1,path2, path3]
+path4 = "http://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QaHlzMTAyLTE4MS1GaXJzdC1NYWpvci1aZXJvLVZlcnNpb24tUG9zdC5wZGY=&h=5d83c961b4ea66bbdcf16bbcb4331f00"
+path5 = "http://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18xNzNfX01ham9yMV9fU29sdmVkX19aZXJvLVZlcnNpb24ucGRm&h=ec2a0f71698702b34b5228ce7d5b2cf9"
+path6 = "http://resources.stkfupm.com/vfm-admin/vfm-downloader.php?q=dXBsb2Fkcy9QSFlTL1BIWVMxMDIvT2xkJTIwRXhhbXMvRmlyc3QlMjBNYWpvci9QSFlTMTAyX18wOTJfX09sZC1FeGFtX19GaXJzdC1NYWpvcl9fTWFzdGVyLUtleS5wZGY=&h=6b5d6b272c6c02eb5d044dce1c43faf7"
+paths = [path1,path2,path3,path4, path5,path6]
 listObject = []
 term = 1
-os.mkdir("images")
+
 for path in paths:
     with open("PDFF.pdf", 'wb') as file:
         r = requests.get(path , stream= False)
@@ -68,19 +69,8 @@ for path in paths:
     count = 0
     data = extract_text("PDFF.pdf")
     data = data.replace("\n" , "")
-    i = 1 
-    b = 0       
-    if("King" in data):
-        data =data.replace("King Fahd University of Petroleum & Minerals Physics Department Phys102 Coordinator: xyz" , "")
-        data =data.replace("King Fahd University of Petroleum & Minerals Physics Department" , "")
-        data =data.replace("Phys102 Coordinator: xyz" , "")
-    while(i < pages):
-        phys= data.index("First Major",b)
-        page= data.find("Page", phys)+7
-        b = phys +1
-        i +=1
-        data = data.replace(data[phys:page] , "")
 
+    
     questionsIndices = []
     for match in findMatches("Q[0-9]|[0-3][0-9]\.\s"): # a pattern consist of the letter Q followed by a number followed by a dot and a space 
         span =match.span()
@@ -97,8 +87,19 @@ for path in paths:
     count =0 
     for match in findMatches("E\)\s"): 
         span = match.span()
-        if(count < 19): 
-            newLineIndex = data.index("Q" , span[0]) 
+        if(count <= 20): 
+            follow =span[0]
+            for i in range(constants.PollLimit.MAX_QUESTION_LENGTH *2):
+                if(data[follow ]== "Q"):
+                    num = follow
+                    break
+                if(data[follow:follow+2] == "Ki" or data[follow:follow+2] =="Fi"):
+                        num = follow
+                        break
+            
+                follow = follow +1
+            newLineIndex =num
+          
         else:
             newLineIndex = len(data) -1
         endIndices.append(newLineIndex)
@@ -113,25 +114,23 @@ for path in paths:
         end = firstChoice[i] 
         question = data[start:end]
         questions.append(question)
+        
 
     #Extracting images
     imgList = [] 
 
-
     for i in range(pages):
         content = pdf[i]
         imgList.extend(content.get_images())
-
         j = 0 
         names  = []
-        
     for i , Image in enumerate(imgList,start =1 ):
             xref =imgList[j][0]                 
             baseImg = pdf.extract_image(xref)
             imgBytes = baseImg['image'] #the actual data that we wanna extract and send
             ext = baseImg['ext']
             name = str(term) + str(i) + "."+ext
-            print(name)
+            
             names.append(name)
             with open(os.path.join("images" , name), 'wb') as imgOut:
                 imgOut.write(imgBytes)
@@ -148,28 +147,48 @@ for path in paths:
         start = firstChoice[i]
         end = endIndices[i]
         answers = data[start:end]
+     
+        if("King" in answers):
+            n= answers.index("King")
+            letters = ["A","B" , "C" , "D" ,"E"]
+            count = n
+      
+            while (answers[count] in letters == False) or answers[count+1] != ")":
+                count = count +1
+            answers = answers[0:n] +answers [count:]
         a = answers.index("A)")
         b = answers.index("B)")
         c = answers.index("C)")
         d= answers.index("D)")
         e= answers.index("E)")
+        
+  
+        
         answer1 = answers[a:b].strip("A) ")
         answer2 = answers[b : c].strip("B) ")
         answer3= answers[c : d].strip("C) ")
         answer4 = answers[d : e].strip("D) ")
         answer5 = answers[ e: ].strip("E) ")
+        
+        question1 = questions[i]
+        for c in question1:
+            if c == "?":
+                indx = question1.index("?")
+                question1 = question1[:indx]
 
-        j= j +1
-        question = Question(questions[i] , answer1,answer2,answer3,answer4,answer5)
+    
+        question = Question(question1 , answer1,answer2,answer3,answer4,answer5)
         if(question.containsFigure()):
             question.setFigureName(names[nameIndx])
             nameIndx+=1
         questionObjects.append(question)
     listObject.append(questionObjects)
 
-for j in listObject:
-    for i in j :  
-        print()
+
+
+
+
+
 j = 0
 def correctAnsPos(ans, correct):
     for i in range(len(ans)):
@@ -209,28 +228,26 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.stop_poll(answered_poll["chat_id"], answered_poll["message_id"])
 
 
-
-
-
-
-async def pollTerms(Questions,update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-   
-   voter = 1 
-   for i in Questions:
+async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE, n ) -> None:
+     for i in listObject[n]:
         if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = "images\\"+ i.getFigureName())
+                await context.bot.send_photo(update.effective_chat.id,photo = open("images\\"+ i.getFigureName(), "rb"))
         pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
         quest = i.getQuestion()
+    
         exp = ""
         if(i.lengthExceeded()):
             holder= quest
             (quest , last) = shorten(quest)
             exp = holder[last:]
-       
+        ans = i.getAns()
+        if(len(i.getAns()[0]) == 0  ):
+            ans = ["EMpty"  , "Empt"]
+            
         message = await context.bot.send_poll(
           update.effective_chat.id,
           quest,
-          i.getAns(),
+          ans,
         is_anonymous=False,
         allows_multiple_answers=False,
         type= constants.PollType.QUIZ, 
@@ -247,114 +264,35 @@ async def pollTerms(Questions,update: Update, context: ContextTypes.DEFAULT_TYPE
         }
        }
         context.bot_data.update(payload)
-
-
-
-
 
 async def t221(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-   
-   voter = 1 
-   for i in listObject[0]:
-        if i.containsFigure():
-               await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
-        pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
-        quest = i.getQuestion()
-        exp = ""
-        if(i.lengthExceeded()):
-            holder= quest
-            (quest , last) = shorten(quest)
-            exp = holder[last:]
-       
-        message = await context.bot.send_poll(
-          update.effective_chat.id,
-          quest,
-          i.getAns(),
-        is_anonymous=False,
-        allows_multiple_answers=False,
-        type= constants.PollType.QUIZ, 
-        correct_option_id = pos, #the postion of the correct option 
-        explanation = exp,
-    )
-       #ans = update.poll.get
-        payload = {
-        message.poll.id: {
-            "questions": i.getAns(),
-            "message_id": message.message_id,
-            "chat_id": update.effective_chat.id,
-            "answers": i.getCorrectAns(),
-        }
-       }
-        context.bot_data.update(payload)
+    await terms(update, context,0 )
+    await update.message.reply_text("-End of Term 221 Major-")
+        
 async def t212(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
- 
-   voter = 1 
-   for i in listObject[1]:
-        if i.containsFigure():
-               await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
-        pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
-        quest = i.getQuestion()
-        exp = ""
-        if(i.lengthExceeded()):
-            holder= quest
-            (quest , last) = shorten(quest)
-            exp = holder[last:]
-       
-        message = await context.bot.send_poll(
-          update.effective_chat.id,
-          quest,
-          i.getAns(),
-        is_anonymous=False,
-        allows_multiple_answers=False,
-        type= constants.PollType.QUIZ, 
-        correct_option_id = pos, #the postion of the correct option 
-        explanation = exp,
-    )
-       #ans = update.poll.get
-        payload = {
-        message.poll.id: {
-            "questions": i.getAns(),
-            "message_id": message.message_id,
-            "chat_id": update.effective_chat.id,
-            "answers": i.getCorrectAns(),
-        }
-       }
-        context.bot_data.update(payload)
 
+
+   await terms(update, context,1)
+   await update.message.reply_text("-End of Term 212 Major-")
+  
+  
 async def t213(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
- 
-   voter = 1 
-   for i in listObject[2]:
-        if i.containsFigure():
-                await context.bot.send_photo(update.effective_chat.id,photo = open(os.path.join("images" , i.getFigureName()), 'rb'))
-        pos =  correctAnsPos(i.getAns() , i.getCorrectAns())
-        quest = i.getQuestion()
-        exp = ""
-        if(i.lengthExceeded()):
-            holder= quest
-            (quest , last) = shorten(quest)
-            exp = holder[last:]
-       
-        message = await context.bot.send_poll(
-          update.effective_chat.id,
-          quest,
-          i.getAns(),
-        is_anonymous=False,
-        allows_multiple_answers=False,
-        type= constants.PollType.QUIZ, 
-        correct_option_id = pos, #the postion of the correct option 
-        explanation = exp,
-    )
-       #ans = update.poll.get
-        payload = {
-        message.poll.id: {
-            "questions": i.getAns(),
-            "message_id": message.message_id,
-            "chat_id": update.effective_chat.id,
-            "answers": i.getCorrectAns(),
-        }
-       }
-        context.bot_data.update(payload)
+    await terms(update, context,2)
+    await update.message.reply_text("-End of Term 213 Major-")
+
+async def t181(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+  await terms(update, context,3)
+  await update.message.reply_text("-End of Term 181 Major-")
+
+async def t173(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await terms(update, context,4)
+    await update.message.reply_text("-End of Term 173 Major-")
+
+async def t112(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await terms(update, context,5)
+    await update.message.reply_text("-End of Term 112 Major-") 
+
+
 
 async def start(update, context):
     options = []
@@ -365,6 +303,7 @@ async def start(update, context):
     markup = InlineKeyboardMarkup([options])
   
     await update.message.reply_text("Hi this is a poll bot for physics 102's majors. Please select the desired term" ,reply_markup=markup)
+    await update.message.reply_text("or simply write the command e.g(/181)")
     choice = update.callback_query
     
 async def buttons(update, context):
@@ -386,6 +325,9 @@ app.add_handler(CallbackQueryHandler(buttons))
 app.add_handler(CommandHandler("221", t221))
 app.add_handler(CommandHandler("212", t212))
 app.add_handler(CommandHandler("213", t213))
+app.add_handler(CommandHandler("181", t181))
+app.add_handler(CommandHandler("173", t173))
+app.add_handler(CommandHandler("112", t112))
 
 
 
